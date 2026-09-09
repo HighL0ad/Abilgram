@@ -4,7 +4,7 @@ import { authService } from "./authService";
 
 export const userService = {
   getProfile: async () => {
-    const { data } = await apiClient.get("/profile/");
+    const { data } = await apiClient.get("/profile");
     return data;
   },
 
