@@ -1,25 +1,36 @@
 services:
   backend:
-    build: ./backend
-    env_file:
-      - .env
+    build:
+      context: ./backend
+    restart: unless-stopped
+    env_file: .env
     ports:
       - "18000:8000"
     volumes:
-      - ./backend:/app
-      - ./media:/app/media
+      - abilgram_media:/app/media
     depends_on:
       db:
         condition: service_healthy
+      supertokens:
+        condition: service_started
+      typesense:
+        condition: service_started
     networks:
       - app_network
 
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+    restart: unless-stopped
     ports:
       - "5173:5173"
-    volumes:
-      - ./frontend:/app
+    environment:
+      VITE_API_URL: "${VITE_API_URL}"
+      VITE_WEBSITE_DOMAIN: "${VITE_WEBSITE_DOMAIN}"
+      VITE_WEBSITE_URL: "${VITE_WEBSITE_URL}"
+    command: >
+      sh -c "npm run build &&
+             npm run serve -- --host 0.0.0.0"
     depends_on:
       - backend
     networks:
@@ -27,52 +38,41 @@ services:
 
   db:
     image: postgres:13
-    env_file:
-      - .env
+    restart: unless-stopped
+    env_file: .env
     volumes:
-      - abilgramdata:/var/lib/postgresql/data/
-    ports:
-      - "5433:5432"
-    restart: on-failure:3
+      - abilgramdata:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
+      test:
+        - CMD-SHELL
+        - pg_isready -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"
       interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 10
       start_period: 10s
     networks:
       - app_network
 
   supertokens:
     image: registry.supertokens.io/supertokens/supertokens-postgresql
-    env_file:
-      - .env
-    ports:
-      - 3567:3567
+    restart: unless-stopped
+    env_file: .env
     environment:
       POSTGRESQL_CONNECTION_URI: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}"
-    restart: unless-stopped
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     networks:
       - app_network
-    # healthcheck:
-    #   test: >
-    #     bash -c 'exec 3<>/dev/tcp/127.0.0.1/3567 && echo -e "GET /hello HTTP/1.1\r\nhost: 127.0.0.1\r\n\r\n" >&3 && cat <&3 | grep "Hello"'
-    #   interval: 10s
-    #   timeout: 5s
-    #   retries: 5
 
   typesense:
     image: typesense/typesense:0.21.0
-    ports:
-      - 8108:8108
-    volumes:
-      - ./typesense-data:/data
+    restart: unless-stopped
     environment:
-      TYPESENSE_API_KEY: "xyz"
+      TYPESENSE_API_KEY: "${TYPESENSE_API_KEY}"
       TYPESENSE_DATA_DIR: "/data"
-    restart: on-failure
+    volumes:
+      - typesensedata:/data
     networks:
       - app_network
 
@@ -82,4 +82,5 @@ networks:
 
 volumes:
   abilgramdata:
-  static:
+  abilgram_media:
+  typesensedata:
