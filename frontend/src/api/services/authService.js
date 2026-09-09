@@ -31,7 +31,7 @@ export const authService = {
   },
 
   saveUserData: async (userData) => {
-    const response = await apiClient.post("/user/", userData);
+    const response = await apiClient.post("/user", userData);
     return response.data;
   },
 
