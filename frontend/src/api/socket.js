@@ -1,11 +1,11 @@
 import { io } from "socket.io-client";
 
-const socket = io("http://localhost:8000/chat", {
+const apiUrl =
+  import.meta.env.VITE_API_URL || "http://localhost:8000";
+
+const socket = io(`${apiUrl}/chat`, {
   transports: ["websocket"],
   autoConnect: true,
-  cors: {
-    origin: "http://localhost:5173",
-  },
 });
 
 export default socket;
