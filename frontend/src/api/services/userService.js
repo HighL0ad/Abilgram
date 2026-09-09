@@ -9,7 +9,7 @@ export const userService = {
   },
 
   updateProfile: async (formData) => {
-    const { data } = await apiClient.patch("/user/", formData, {
+    const { data } = await apiClient.patch("/user", formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
@@ -70,7 +70,7 @@ export const userService = {
 
   deleteChat: async (chatId) => {
     try {
-      await apiClient.delete(`/delete_chat/?chat_id=${chatId}`);
+      await apiClient.delete(`/delete_chat?chat_id=${chatId}`);
     } catch (error) {
       console.error("Error deleting chat:", error);
       throw error;
@@ -79,7 +79,7 @@ export const userService = {
 
   sendMessage: async (chatId, message) => {
     try {
-      await apiClient.post("/send_message/", {
+      await apiClient.post("/send_message", {
         chat_id: chatId,
         content: message,
       });
