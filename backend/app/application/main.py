@@ -46,7 +46,7 @@ def create_app():
         app_info=InputAppInfo(
             app_name="abilgram",
             api_domain=settings.API_DOMAIN,
-            origin="http://localhost:5173",
+            origin=settings.WEBSITE_DOMAIN,,
             api_base_path="/auth",
             website_base_path="/auth",
         ),
